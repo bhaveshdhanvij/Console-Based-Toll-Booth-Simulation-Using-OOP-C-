@@ -1,157 +1,134 @@
-#include <iostream>
-#include <iomanip>
+// Console-Based Toll Booth Simulation Using Object-Oriented Programming (C++)
+
+#include<bits/stdc++.h>
 using namespace std;
 
-// Abstract Base Class (Abstraction)
 class Vehicle {
-protected:
+protected:              // Data Hiding
     string vehicleNumber;
     double tollPaid;
+
 public:
-    Vehicle(string number = "") {
+    Vehicle(string number) {   // Constructor
         vehicleNumber = number;
         tollPaid = 0;
     }
 
-    void setTollPaid(double amount) { tollPaid = amount; }
-    double getTollPaid() { return tollPaid; }
+    virtual double calculateToll() const = 0; // Pure virtual function
 
-    void setVehicleNumber(string number) { vehicleNumber = number; }
-    string getVehicleNumber() { return vehicleNumber; }
+    string getNumber() const {
+        return vehicleNumber;
+    }
 
-    virtual string getType() = 0;  // Polymorphism: virtual function
+    double getTollPaid() const {
+        return tollPaid;
+    }
 
-    virtual ~Vehicle() {} // Destructor
+    virtual string getType() const = 0;
+
+    virtual ~Vehicle() {}      // Virtual destructor
 };
 
-// Derived Classes (Inheritance)
+// Derived Classes (Inheritance + Polymorphism)
 class Car : public Vehicle {
 public:
-    Car(string number = "") : Vehicle(number) {}
-    string getType() { return "Car"; }
+    Car(string number) : Vehicle(number) {}
+
+    double calculateToll() const override {
+        return 50;
+    }
+
+    string getType() const override {
+        return "Car";
+    }
 };
 
 class Truck : public Vehicle {
 public:
-    Truck(string number = "") : Vehicle(number) {}
-    string getType() { return "Truck"; }
-};
+    Truck(string number) : Vehicle(number) {}
 
-class Bus : public Vehicle {
-public:
-    Bus(string number = "") : Vehicle(number) {}
-    string getType() { return "Bus"; }
+    double calculateToll() const override {
+        return 100;
+    }
+
+    string getType() const override {
+        return "Truck";
+    }
 };
 
 class Bike : public Vehicle {
 public:
-    Bike(string number = "") : Vehicle(number) {}
-    string getType() { return "Bike"; }
+    Bike(string number) : Vehicle(number) {}
+
+    double calculateToll() const override {
+        return 30;
+    }
+
+    string getType() const override {
+        return "Bike";
+    }
 };
 
 // TollBooth Class (Encapsulation)
 class TollBooth {
 private:
-    Vehicle* vehicles[100];  // Array to store vehicles
-    int vehicleCount;
-    double totalMoney;
-    int carCount, truckCount, busCount, bikeCount;
+    vector<Vehicle*> vehicles;   // Stores vehicles
+    double totalCollection;
 
 public:
     TollBooth() {
-        vehicleCount = 0;
-        totalMoney = 0;
-        carCount = truckCount = busCount = bikeCount = 0;
+        totalCollection = 0;
     }
 
-    double calculateToll(string type) {
-        if(type == "Car") return 50;
-        else if(type == "Truck") return 100;
-        else if(type == "Bus") return 75;
-        else if(type == "Bike") return 30;
-        else return 0;
+    void addVehicle(Vehicle* v) {
+        double toll = v->calculateToll(); // Runtime polymorphism
+        totalCollection += toll;
+        vehicles.push_back(v);
     }
 
-    void addVehicle(Vehicle &v, bool isPaid) {
-        if(isPaid) {
-            double toll = calculateToll(v.getType());
-            v.setTollPaid(toll);
-            totalMoney += toll;
-
-            if(v.getType() == "Car") carCount++;
-            else if(v.getType() == "Truck") truckCount++;
-            else if(v.getType() == "Bus") busCount++;
-            else if(v.getType() == "Bike") bikeCount++;
-        }
-
-        vehicles[vehicleCount] = &v;
-        vehicleCount++;
-    }
-
-    void displaySummary() {
-        cout << "\n===== Toll Booth Summary =====\n";
-        cout << "Total vehicles: " << vehicleCount << endl;
-        cout << "Total money collected: ₹" << totalMoney << endl;
-        cout << "Cars: " << carCount << ", Trucks: " << truckCount
-             << ", Buses: " << busCount << ", Bikes: " << bikeCount << endl;
+    void displaySummary() const {
+        cout << "\n--- Toll Booth Summary ---\n";
+        cout << "Total Vehicles: " << vehicles.size() << endl;
+        cout << "Total Collection: ₹" << totalCollection << endl;
 
         cout << "\nVehicle Details:\n";
-        cout << setw(10) << left << "Number" 
-             << setw(10) << left << "Type" 
-             << "Toll Paid\n";
-
-        for(int i=0; i<vehicleCount; i++) {
-            cout << setw(10) << left << vehicles[i]->getVehicleNumber()
-                 << setw(10) << left << vehicles[i]->getType()
-                 << "₹" << vehicles[i]->getTollPaid() << endl;
+        for (auto v : vehicles) {
+            cout << v->getType()
+                 << " | " << v->getNumber()
+                 << " | Toll: ₹" << v->calculateToll() << endl;
         }
     }
 };
 
 int main() {
     TollBooth booth;
-    string choice;
+    int choice;
 
-    // Array of Vehicle objects
-    Vehicle* vehicleArray[100];
-    int index = 0;
+    while (true) {
+        cout << "\n1.Car  2.Truck  3.Bike  0.Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;
 
-    do {
-        cout << "\nEnter vehicle type (1.Car 2.Truck 3.Bus 4.Bike) or 0 to exit: ";
-        int type;
-        cin >> type;
+        if (choice == 0) break;
 
-        if(type == 0) break;
-
-        cout << "Enter vehicle number: ";
         string number;
+        cout << "Enter vehicle number: ";
         cin >> number;
 
-        Vehicle* v;
+        Vehicle* v = nullptr;
 
-        switch(type) {
-            case 1: v = new Car(number); break;
-            case 2: v = new Truck(number); break;
-            case 3: v = new Bus(number); break;
-            case 4: v = new Bike(number); break;
-            default: cout << "Invalid type, defaulting to Car\n"; v = new Car(number);
+        if (choice == 1) v = new Car(number);
+        else if (choice == 2) v = new Truck(number);
+        else if (choice == 3) v = new Bike(number);
+        else {
+            cout << "Invalid choice\n";
+            continue;
         }
 
-        cout << "Has toll been paid? (y/n): ";
-        char paid;
-        cin >> paid;
-        bool isPaid = (paid=='y' || paid=='Y');
-
-        booth.addVehicle(*v, isPaid);
-        vehicleArray[index++] = v;
-
-    } while(true);
+        booth.addVehicle(v);
+    }
 
     booth.displaySummary();
-
-    // Cleanup
-    for(int i=0; i<index; i++)
-        delete vehicleArray[i];
 
     return 0;
 }
